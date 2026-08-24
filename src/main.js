@@ -1,6 +1,8 @@
 import './styles.css';
 import { createMap } from './map/createMap.js';
 import { createStatus } from './ui/status.js';
+import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
+import { showGpxTrack, padBounds } from './gpx/gpxTrack.js';
 
 const status = createStatus();
 const terrainDebug = createStatus('terrain-debug');
@@ -94,4 +96,32 @@ setTimeout(() => {
 map.on('error', (event) => {
   console.error(event.error ?? event);
   status.set('MapLibre-Fehler – Details in der Browser-Konsole', 'error');
+});
+
+async function ensureStyleLoaded() {
+  if (map.isStyleLoaded()) return;
+  await new Promise((resolve) => map.once('load', resolve));
+}
+
+const gpxInput = document.getElementById('gpx-input');
+gpxInput?.addEventListener('change', async () => {
+  const file = gpxInput.files?.[0];
+  gpxInput.value = '';
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const { geojson, bounds } = parseGpxToGeoJSON(text);
+
+    await ensureStyleLoaded();
+    showGpxTrack(map, geojson);
+    map.setMaxBounds(null);
+    map.fitBounds(bounds, { padding: 60, duration: 800 });
+    map.setMaxBounds(padBounds(bounds));
+
+    status.set(`GPX-Track geladen: ${file.name}`, 'ready');
+  } catch (error) {
+    console.error(error);
+    status.set(`GPX-Fehler: ${error.message}`, 'error');
+  }
 });

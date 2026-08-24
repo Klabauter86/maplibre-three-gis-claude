@@ -11,6 +11,8 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
 - Automatic terrain fallback: if terrain tiles don't arrive within 15s (e.g. blocked by a
   content/network filter), terrain is disabled and the app continues with a flat map
   instead of hanging
+- GPX import: load a `.gpx` file via the "GPX laden" button, its track is drawn on the
+  map, and the view zooms in and is restricted (`maxBounds`) to an area around the track
 - Vite development/build setup
 - GitHub Codespaces/devcontainer port forwarding for port 5173
 
@@ -37,6 +39,9 @@ src/
 ├── map/
 │   ├── config.js
 │   └── createMap.js
+├── gpx/
+│   ├── parseGpx.js
+│   └── gpxTrack.js
 ├── ui/
 │   └── status.js
 ├── main.js
