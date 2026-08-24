@@ -2,7 +2,8 @@ import './styles.css';
 import { createMap } from './map/createMap.js';
 import { createStatus } from './ui/status.js';
 import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
-import { showGpxTrack } from './gpx/gpxTrack.js';
+import { showGpxTrack, showTrackMask } from './gpx/gpxTrack.js';
+import { buildTrackMask } from './gpx/trackMask.js';
 
 const status = createStatus();
 const terrainDebug = createStatus('terrain-debug');
@@ -114,6 +115,8 @@ gpxInput?.addEventListener('change', async () => {
     const { geojson, bounds } = parseGpxToGeoJSON(text);
 
     await ensureStyleLoaded();
+    const trackMask = buildTrackMask(geojson.features[0]);
+    showTrackMask(map, trackMask);
     showGpxTrack(map, geojson);
     map.fitBounds(bounds, { padding: 60, duration: 800 });
 
