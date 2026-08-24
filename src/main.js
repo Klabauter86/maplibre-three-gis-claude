@@ -9,7 +9,7 @@ const map = createMap();
 
 async function getNatureData() {
   try {
-    const external = await loadGeoJSON('/data/example.geojson');
+    const external = await loadGeoJSON(`${import.meta.env.BASE_URL}data/example.geojson`);
     if (external?.features?.length) return external;
   } catch (error) {
     console.warn(error);

@@ -59,7 +59,7 @@ export function createDemoNatureData({ treeCount = 650, rockCount = 100, center 
   return { type: 'FeatureCollection', features };
 }
 
-export async function loadGeoJSON(url = '/data/example.geojson') {
+export async function loadGeoJSON(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`GeoJSON konnte nicht geladen werden: ${response.status}`);
   return response.json();
