@@ -1,33 +1,28 @@
-import * as maplibregl from 'maplibre-gl';
-
 const HOLD_MS = 500;
 const CANCEL_THRESHOLD_PX = 8; // movement before activation cancels the long-press
 const DEADZONE_PX = 6; // vertical offset after activation that still counts as "no speed"
 const MAX_DEGREES_PER_SECOND = 180;
 const MAX_OFFSET_PX = 200; // vertical offset (from the press point) for max speed
 
-function rotateAround(point, anchor, angleRad) {
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
-  const dx = point.x - anchor.x;
-  const dy = point.y - anchor.y;
-  return {
-    x: anchor.x + dx * cos - dy * sin,
-    y: anchor.y + dx * sin + dy * cos,
-  };
-}
-
 // Long-press a point on the map to arm orbiting around it, then drag
 // vertically to steer: up spins the view clockwise, down spins it
 // counter-clockwise, and speed scales with how far up/down you've moved.
 //
-// The orbit math works in flat Mercator (world) coordinates and applies the
-// result with a single jumpTo() per frame, rather than chaining
-// easeTo({duration: 0, around}) or panBy() every frame — those route through
-// MapLibre's full ease machinery and are too expensive/erratic to call at
-// 60fps. jumpTo() still keeps terrain elevation live (MapLibre samples it
-// once per call), so the 3D terrain stays fully active and rendered while
-// orbiting.
+// Rotating the *view* clockwise means the map's bearing must decrease:
+// MapLibre's compass indicator rotates by -bearing (see NavigationControl),
+// so increasing bearing sweeps the map content counter-clockwise on screen
+// and decreasing it sweeps clockwise. Screen Y grows downward, so moving up
+// produces a negative offset — that's why clockwise (bearing decreasing)
+// pairs with a negative offset below.
+//
+// Each frame re-centers via map.easeTo({ around, duration: 0 }) rather than
+// rotating the center manually in flat Mercator coordinates: easeTo's
+// "around" handling goes through the transform's terrain-aware
+// setLocationAtPoint, so the pressed point stays pinned to the correct
+// screen position even as its terrain elevation changes along the orbit.
+// duration: 0 makes easeTo apply instantly and synchronously (see
+// Camera#_ease) instead of starting its own animation loop, so it's safe
+// to call every requestAnimationFrame tick.
 export function enableOrbitOnLongPress(map) {
   const canvas = map.getCanvasContainer();
 
@@ -35,7 +30,6 @@ export function enableOrbitOnLongPress(map) {
   let startClientPos = null;
   let currentClientY = null;
   let anchorLngLat = null;
-  let anchorMerc = null;
   let rafId = null;
   let lastFrameTime = null;
   let rotating = false;
@@ -69,15 +63,8 @@ export function enableOrbitOnLongPress(map) {
     const degreesPerSecond = speedFraction * MAX_DEGREES_PER_SECOND;
 
     if (degreesPerSecond !== 0 && dt > 0) {
-      const deltaBearingDeg = degreesPerSecond * dt;
-      const nextBearing = map.getBearing() + deltaBearingDeg;
-
-      const centerMerc = maplibregl.MercatorCoordinate.fromLngLat(map.getCenter());
-      const angleRad = (deltaBearingDeg * Math.PI) / 180;
-      const rotated = rotateAround(centerMerc, anchorMerc, angleRad);
-      const newCenter = new maplibregl.MercatorCoordinate(rotated.x, rotated.y, centerMerc.z).toLngLat();
-
-      map.jumpTo({ bearing: nextBearing, center: newCenter });
+      const nextBearing = map.getBearing() + degreesPerSecond * dt;
+      map.easeTo({ bearing: nextBearing, around: anchorLngLat, duration: 0 });
     }
     rafId = requestAnimationFrame(tick);
   }
@@ -85,7 +72,6 @@ export function enableOrbitOnLongPress(map) {
   function startRotation(lngLat) {
     rotating = true;
     anchorLngLat = lngLat;
-    anchorMerc = maplibregl.MercatorCoordinate.fromLngLat(lngLat);
     lastFrameTime = null;
     map.dragPan.disable();
     map.dragRotate.disable();
