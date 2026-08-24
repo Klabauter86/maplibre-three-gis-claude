@@ -21,13 +21,13 @@ function rotateAround(point, anchor, angleRad) {
 // vertically to steer: up spins the view clockwise, down spins it
 // counter-clockwise, and speed scales with how far up/down you've moved.
 //
-// The orbit math works in flat Mercator (world) coordinates rather than
-// through map.project()/easeTo()/panBy() — those all trigger MapLibre's
-// terrain-elevation lookups internally, which is far too expensive to run
-// every animation frame while terrain is active (it made the rotation
-// erratic and could stall the page). A horizontal orbit around a ground
-// point doesn't need terrain height at all, so terrain is disabled for the
-// duration of the gesture and restored on release.
+// The orbit math works in flat Mercator (world) coordinates and applies the
+// result with a single jumpTo() per frame, rather than chaining
+// easeTo({duration: 0, around}) or panBy() every frame — those route through
+// MapLibre's full ease machinery and are too expensive/erratic to call at
+// 60fps. jumpTo() still keeps terrain elevation live (MapLibre samples it
+// once per call), so the 3D terrain stays fully active and rendered while
+// orbiting.
 export function enableOrbitOnLongPress(map) {
   const canvas = map.getCanvasContainer();
 
@@ -39,7 +39,6 @@ export function enableOrbitOnLongPress(map) {
   let rafId = null;
   let lastFrameTime = null;
   let rotating = false;
-  let previousTerrain = null;
 
   function clearPressTimer() {
     if (pressTimer) {
@@ -53,8 +52,6 @@ export function enableOrbitOnLongPress(map) {
     rotating = false;
     if (rafId != null) cancelAnimationFrame(rafId);
     rafId = null;
-    if (previousTerrain) map.setTerrain(previousTerrain);
-    previousTerrain = null;
     map.dragPan.enable();
     map.dragRotate.enable();
     map.touchZoomRotate.enable();
@@ -90,8 +87,6 @@ export function enableOrbitOnLongPress(map) {
     anchorLngLat = lngLat;
     anchorMerc = maplibregl.MercatorCoordinate.fromLngLat(lngLat);
     lastFrameTime = null;
-    previousTerrain = map.getTerrain();
-    if (previousTerrain) map.setTerrain(null);
     map.dragPan.disable();
     map.dragRotate.disable();
     map.touchZoomRotate.disable();
