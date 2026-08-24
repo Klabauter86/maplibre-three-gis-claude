@@ -5,6 +5,7 @@ import { createStatus } from './ui/status.js';
 import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
 import { showGpxTrack, showTrackMask, removeGpxTrackAndMask } from './gpx/gpxTrack.js';
 import { buildTrackMask } from './gpx/trackMask.js';
+import { enableOrbitOnLongPress } from './map/orbitOnLongPress.js';
 
 const status = createStatus();
 
@@ -19,6 +20,7 @@ if (!webgl2 && !webgl1) {
 status.set(`Initialisiere 3D-GIS … (WebGL${webgl2 ? '2' : '1'} ok)`);
 
 const map = createMap();
+enableOrbitOnLongPress(map);
 
 const tileCounts = { osm: 0, terrainSource: 0 };
 map.on('sourcedata', (event) => {
@@ -75,6 +77,7 @@ resetButton?.addEventListener('click', () => {
     center: MAP_CONFIG.center,
     zoom: MAP_CONFIG.zoom,
     pitch: MAP_CONFIG.pitch,
+    bearing: 0,
     duration: 800,
   });
   resetButton.hidden = true;

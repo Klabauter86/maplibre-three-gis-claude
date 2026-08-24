@@ -7,13 +7,14 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
 - OpenStreetMap raster basemap
 - Mapterhorn Terrain Tiles (Terrarium DEM)
 - MapLibre `raster-dem` terrain + hillshade
-- On-screen diagnostics (WebGL check, tile-load counter, terrain elevation readout)
 - Automatic terrain fallback: if terrain tiles don't arrive within 15s (e.g. blocked by a
   content/network filter), terrain is disabled and the app continues with a flat map
   instead of hanging
 - GPX import: load a `.gpx` file via the "GPX laden" button, its track is drawn on the
   map, the view zooms in to it, and the map/terrain outside a corridor around the
-  track is masked out so only that area is visible
+  track is masked out so only that area is visible; "Ansicht zurücksetzen" removes it
+  and returns to the default view
+- Long-press a point on the map to orbit the view clockwise around it; release to stop
 - Vite development/build setup
 - GitHub Codespaces/devcontainer port forwarding for port 5173
 
@@ -39,7 +40,8 @@ npm run preview
 src/
 ├── map/
 │   ├── config.js
-│   └── createMap.js
+│   ├── createMap.js
+│   └── orbitOnLongPress.js
 ├── gpx/
 │   ├── parseGpx.js
 │   ├── trackMask.js
