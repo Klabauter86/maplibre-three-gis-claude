@@ -21,16 +21,3 @@ export function showGpxTrack(map, geojson) {
     },
   });
 }
-
-// Pads a [[minLng, minLat], [maxLng, maxLat]] box so the restricted view
-// covers some area *around* the track rather than clamping tight to it.
-export function padBounds([[minLng, minLat], [maxLng, maxLat]], factor = 0.3) {
-  const lngSpan = Math.max(maxLng - minLng, 0.01);
-  const latSpan = Math.max(maxLat - minLat, 0.01);
-  const padLng = lngSpan * factor;
-  const padLat = latSpan * factor;
-  return [
-    [minLng - padLng, minLat - padLat],
-    [maxLng + padLng, maxLat + padLat],
-  ];
-}

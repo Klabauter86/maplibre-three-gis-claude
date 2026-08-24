@@ -2,7 +2,7 @@ import './styles.css';
 import { createMap } from './map/createMap.js';
 import { createStatus } from './ui/status.js';
 import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
-import { showGpxTrack, padBounds } from './gpx/gpxTrack.js';
+import { showGpxTrack } from './gpx/gpxTrack.js';
 
 const status = createStatus();
 const terrainDebug = createStatus('terrain-debug');
@@ -115,9 +115,7 @@ gpxInput?.addEventListener('change', async () => {
 
     await ensureStyleLoaded();
     showGpxTrack(map, geojson);
-    map.setMaxBounds(null);
     map.fitBounds(bounds, { padding: 60, duration: 800 });
-    map.setMaxBounds(padBounds(bounds));
 
     status.set(`GPX-Track geladen: ${file.name}`, 'ready');
   } catch (error) {

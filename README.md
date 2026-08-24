@@ -12,7 +12,7 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
   content/network filter), terrain is disabled and the app continues with a flat map
   instead of hanging
 - GPX import: load a `.gpx` file via the "GPX laden" button, its track is drawn on the
-  map, and the view zooms in and is restricted (`maxBounds`) to an area around the track
+  map and the view zooms in to it
 - Vite development/build setup
 - GitHub Codespaces/devcontainer port forwarding for port 5173
 
