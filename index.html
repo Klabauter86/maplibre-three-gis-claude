@@ -10,7 +10,10 @@
     <div id="app">
       <div id="map"></div>
       <div id="status" class="status">Initialisiere 3D-GIS …</div>
-      <div id="terrain-debug" class="status debug-top" hidden></div>
+      <div class="debug-stack">
+        <div id="terrain-debug" class="status" hidden></div>
+        <div id="fetch-debug" class="status" hidden></div>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

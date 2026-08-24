@@ -18,13 +18,21 @@ html, body { overflow: hidden; background: #111827; font-family: Inter, ui-sans-
 }
 .status[data-state="ready"] { background: rgb(20 83 45 / 78%); }
 .status[data-state="error"] { background: rgb(127 29 29 / 86%); }
-.status.debug-top {
-  bottom: auto;
-  left: auto;
+.debug-stack {
+  position: fixed;
+  z-index: 5;
   top: max(12px, env(safe-area-inset-top));
   right: max(56px, env(safe-area-inset-right) + 56px);
-  font-size: 11px;
   max-width: min(60vw, 340px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.debug-stack .status {
+  position: static;
+  font-size: 11px;
+  max-width: 100%;
 }
 .maplibregl-ctrl-top-right { top: env(safe-area-inset-top); right: env(safe-area-inset-right); }
 .maplibregl-ctrl-bottom-right { bottom: env(safe-area-inset-bottom); right: env(safe-area-inset-right); }
