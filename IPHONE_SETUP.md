@@ -67,15 +67,5 @@ npm run dev
 - Für die eigentliche App-Preview Safari verwenden.
 - Chrome auf iOS verwendet ebenfalls WebKit; für echtes Chromium-Testing später zusätzlich Desktop-Chrome oder Android testen.
 - Codespaces kann bei Inaktivität stoppen. Beim nächsten Öffnen Codespace wieder starten und gegebenenfalls `npm run dev -- --host 0.0.0.0` erneut ausführen.
-- Für MapLibre/Three.js ist ein iPhone als echtes Testgerät besonders nützlich, weil WebGL-Leistung, Touch-Gesten und Speicherlimits direkt sichtbar werden.
+- Für MapLibre ist ein iPhone als echtes Testgerät besonders nützlich, weil WebGL-Leistung, Touch-Gesten und Speicherlimits direkt sichtbar werden.
 
-## Nächster technischer Entwicklungsschritt
-
-Die aktuelle Basis ist für den nächsten Ausbau vorbereitet:
-
-1. GLB/GLTF-Loader integrieren.
-2. Baum- und Felsmodelle auf wiederverwendbare Geometrien/Materialien reduzieren.
-3. InstancedMesh pro Modell-/LOD-Gruppe aufbauen.
-4. GeoJSON aus `public/data/` laden.
-5. Terrainhöhe über `queryTerrainElevation()` übernehmen.
-6. Danach räumliche Kachelung, Culling und LOD für 100.000+ Instanzen ergänzen.

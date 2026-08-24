@@ -18,10 +18,10 @@ export const SOURCES = {
   },
   terrain: {
     type: 'raster-dem',
-    tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-    tileSize: 256,
+    tiles: ['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp'],
+    tileSize: 512,
     encoding: 'terrarium',
-    maxzoom: 15,
-    attribution: 'Terrain: AWS Open Data / Mapzen',
+    maxzoom: 14,
+    attribution: 'Terrain: <a href="https://mapterhorn.com/attribution" target="_blank" rel="noopener">Mapterhorn</a>',
   },
 };
