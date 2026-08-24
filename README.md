@@ -14,7 +14,9 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
   map, the view zooms in to it, and the map/terrain outside a corridor around the
   track is masked out so only that area is visible; "Ansicht zurücksetzen" removes it
   and returns to the default view
-- Long-press a point on the map to orbit the view clockwise around it; release to stop
+- Long-press a point on the map to arm orbiting around it, then drag vertically to
+  steer: up spins the view clockwise, down spins it counter-clockwise, speed scales
+  with how far up/down you've moved; release to stop
 - Vite development/build setup
 - GitHub Codespaces/devcontainer port forwarding for port 5173
 
