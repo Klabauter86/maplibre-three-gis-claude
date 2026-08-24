@@ -7,26 +7,6 @@ import { buildTrackMask } from './gpx/trackMask.js';
 
 const status = createStatus();
 const terrainDebug = createStatus('terrain-debug');
-const fetchDebug = createStatus('fetch-debug');
-
-// Independent, direct fetch() of the terrain TileJSON — bypasses MapLibre
-// entirely so a CORS rejection or network failure shows up as an explicit,
-// on-screen error message instead of a silent hang inside the map's
-// internal source-loading logic.
-fetchDebug.set('Prüfe Terrain-Erreichbarkeit …');
-fetch('https://tiles.mapterhorn.com/tilejson.json', { mode: 'cors' })
-  .then((response) => {
-    if (!response.ok) {
-      fetchDebug.set(`Fetch-Test: HTTP ${response.status} ${response.statusText}`, 'error');
-      return;
-    }
-    return response.json().then((json) => {
-      fetchDebug.set(`Fetch-Test OK: tiles=${json.tiles?.[0] ?? '?'}`, 'ready');
-    });
-  })
-  .catch((error) => {
-    fetchDebug.set(`Fetch-Test FEHLER: ${error.name}: ${error.message}`, 'error');
-  });
 
 const canvas = document.createElement('canvas');
 const webgl2 = canvas.getContext('webgl2');
@@ -44,7 +24,6 @@ const tileCounts = { osm: 0, terrainSource: 0 };
 map.on('sourcedata', (event) => {
   if (event.sourceId && event.sourceId in tileCounts && event.tile) {
     tileCounts[event.sourceId] += 1;
-    terrainDebug.set(`Lade Kacheln … osm=${tileCounts.osm} terrain=${tileCounts.terrainSource}`);
   }
 });
 
