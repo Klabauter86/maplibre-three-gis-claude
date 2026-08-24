@@ -33,18 +33,6 @@ map.on('error', (event) => {
   }
 });
 
-let loaded = false;
-map.once('load', () => {
-  loaded = true;
-});
-setTimeout(() => {
-  if (loaded) return;
-  status.set(
-    `Timeout: Karten-„load“ nach 15s nicht ausgelöst (Kacheln: osm=${tileCounts.osm}, terrain=${tileCounts.terrain}) – vermutlich hängende Netzwerk-Requests`,
-    'error',
-  );
-}, 15000);
-
 async function getNatureData() {
   try {
     const external = await loadGeoJSON(`${import.meta.env.BASE_URL}data/example.geojson`);
@@ -55,9 +43,17 @@ async function getNatureData() {
   return createDemoNatureData();
 }
 
-map.on('load', async () => {
+let started = false;
+
+async function start(note) {
+  if (started) return;
+  started = true;
+
   status.set('Terrain geladen · erzeuge Vegetation …');
-  await new Promise((resolve) => map.once('idle', resolve));
+  await Promise.race([
+    new Promise((resolve) => map.once('idle', resolve)),
+    new Promise((resolve) => setTimeout(resolve, 5000)),
+  ]);
 
   const center = map.getCenter();
   const elevation = map.queryTerrainElevation(center);
@@ -65,13 +61,30 @@ map.on('load', async () => {
   terrainDebug.set(
     `Terrain: ${terrain ? 'aktiv' : 'AUS'} · Elevation@Zentrum: ${
       elevation != null ? Math.round(elevation) + ' m' : 'null'
-    } · pitch=${Math.round(map.getPitch())}°`,
+    } · pitch=${Math.round(map.getPitch())}°${note ? ` · ${note}` : ''}`,
     elevation ? 'ready' : 'error',
   );
 
   const data = await getNatureData();
   map.addLayer(createNatureLayer({ data, status }));
-});
+}
+
+map.once('load', () => start());
+
+// Terrain (raster-dem via AWS S3) can hang indefinitely with zero tiles
+// arriving and no error event — e.g. an ad/content blocker silently
+// dropping requests to amazonaws.com while normal raster tiles load fine.
+// MapLibre's 'load' event waits on terrain, so without this fallback the
+// app would be stuck on the initial status text forever.
+setTimeout(() => {
+  if (started) return;
+  if (tileCounts.terrain === 0) {
+    map.setTerrain(null);
+    start(`Terrain deaktiviert – keine Kacheln nach 15s (osm=${tileCounts.osm} lud erfolgreich, evtl. Blocker auf amazonaws.com)`);
+  } else {
+    start(`Timeout nach 15s (osm=${tileCounts.osm}, terrain=${tileCounts.terrain})`);
+  }
+}, 15000);
 
 map.on('error', (event) => {
   console.error(event.error ?? event);
