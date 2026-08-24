@@ -1,12 +1,12 @@
 import './styles.css';
 import { createMap } from './map/createMap.js';
+import { MAP_CONFIG } from './map/config.js';
 import { createStatus } from './ui/status.js';
 import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
-import { showGpxTrack, showTrackMask } from './gpx/gpxTrack.js';
+import { showGpxTrack, showTrackMask, removeGpxTrackAndMask } from './gpx/gpxTrack.js';
 import { buildTrackMask } from './gpx/trackMask.js';
 
 const status = createStatus();
-const terrainDebug = createStatus('terrain-debug');
 
 const canvas = document.createElement('canvas');
 const webgl2 = canvas.getContext('webgl2');
@@ -27,33 +27,18 @@ map.on('sourcedata', (event) => {
   }
 });
 
-map.on('error', (event) => {
-  if (event.sourceId === 'terrainSource' || event.sourceId === 'hillshadeSource') {
-    terrainDebug.set(`Terrain-Fehler: ${event.error?.message ?? 'unbekannt'}`, 'error');
-  }
-});
-
 let started = false;
 
 async function start(note) {
   if (started) return;
   started = true;
 
-  status.set('Terrain geladen', 'ready');
   await Promise.race([
     new Promise((resolve) => map.once('idle', resolve)),
     new Promise((resolve) => setTimeout(resolve, 5000)),
   ]);
 
-  const center = map.getCenter();
-  const elevation = map.queryTerrainElevation(center);
-  const terrain = map.getTerrain();
-  terrainDebug.set(
-    `Terrain: ${terrain ? 'aktiv' : 'AUS'} · Elevation@Zentrum: ${
-      elevation != null ? Math.round(elevation) + ' m' : 'null'
-    } · pitch=${Math.round(map.getPitch())}°${note ? ` · ${note}` : ''}`,
-    elevation ? 'ready' : 'error',
-  );
+  status.set(note ?? 'Terrain geladen', note ? 'error' : 'ready');
 }
 
 map.once('load', () => start());
@@ -83,6 +68,19 @@ async function ensureStyleLoaded() {
   await new Promise((resolve) => map.once('load', resolve));
 }
 
+const resetButton = document.getElementById('reset-view');
+resetButton?.addEventListener('click', () => {
+  removeGpxTrackAndMask(map);
+  map.easeTo({
+    center: MAP_CONFIG.center,
+    zoom: MAP_CONFIG.zoom,
+    pitch: MAP_CONFIG.pitch,
+    duration: 800,
+  });
+  resetButton.hidden = true;
+  status.set('Ansicht zurückgesetzt', 'ready');
+});
+
 const gpxInput = document.getElementById('gpx-input');
 gpxInput?.addEventListener('change', async () => {
   const file = gpxInput.files?.[0];
@@ -98,6 +96,7 @@ gpxInput?.addEventListener('change', async () => {
     showTrackMask(map, trackMask);
     showGpxTrack(map, geojson);
     map.fitBounds(bounds, { padding: 60, duration: 800 });
+    if (resetButton) resetButton.hidden = false;
 
     status.set(`GPX-Track geladen: ${file.name}`, 'ready');
   } catch (error) {

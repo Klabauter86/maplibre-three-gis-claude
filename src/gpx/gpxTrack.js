@@ -45,3 +45,13 @@ export function showGpxTrack(map, geojson) {
     },
   });
 }
+
+export function removeGpxTrackAndMask(map) {
+  for (const [layerId, sourceId] of [
+    [TRACK_LAYER_ID, TRACK_SOURCE_ID],
+    [MASK_LAYER_ID, MASK_SOURCE_ID],
+  ]) {
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
+  }
+}

@@ -9,7 +9,10 @@
   <body>
     <div id="app">
       <div id="map"></div>
-      <label id="gpx-control" class="gpx-control" for="gpx-input">GPX laden</label>
+      <div class="controls-stack">
+        <label id="gpx-control" class="gpx-control" for="gpx-input">GPX laden</label>
+        <button id="reset-view" class="gpx-control" type="button" hidden>Ansicht zurücksetzen</button>
+      </div>
       <!--
         iOS Safari maps `accept` to file-type UTIs when browsing the Files
         app; ".gpx"/"application/gpx+xml" alone don't resolve to a known
@@ -23,9 +26,6 @@
         hidden
       />
       <div id="status" class="status">Initialisiere 3D-GIS …</div>
-      <div class="debug-stack">
-        <div id="terrain-debug" class="status" hidden></div>
-      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
