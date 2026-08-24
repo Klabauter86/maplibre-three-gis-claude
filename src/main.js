@@ -17,16 +17,16 @@ status.set(`Initialisiere 3D-GIS … (WebGL${webgl2 ? '2' : '1'} ok)`);
 
 const map = createMap();
 
-const tileCounts = { osm: 0, terrain: 0 };
+const tileCounts = { osm: 0, terrainSource: 0 };
 map.on('sourcedata', (event) => {
   if (event.sourceId && event.sourceId in tileCounts && event.tile) {
     tileCounts[event.sourceId] += 1;
-    terrainDebug.set(`Lade Kacheln … osm=${tileCounts.osm} terrain=${tileCounts.terrain}`);
+    terrainDebug.set(`Lade Kacheln … osm=${tileCounts.osm} terrain=${tileCounts.terrainSource}`);
   }
 });
 
 map.on('error', (event) => {
-  if (event.sourceId === 'terrain') {
+  if (event.sourceId === 'terrainSource' || event.sourceId === 'hillshadeSource') {
     terrainDebug.set(`Terrain-Fehler: ${event.error?.message ?? 'unbekannt'}`, 'error');
   }
 });
@@ -63,11 +63,11 @@ map.once('load', () => start());
 // fallback the app would be stuck on the initial status text forever.
 setTimeout(() => {
   if (started) return;
-  if (tileCounts.terrain === 0) {
+  if (tileCounts.terrainSource === 0) {
     map.setTerrain(null);
     start(`Terrain deaktiviert – keine Kacheln nach 15s (osm=${tileCounts.osm} lud erfolgreich)`);
   } else {
-    start(`Timeout nach 15s (osm=${tileCounts.osm}, terrain=${tileCounts.terrain})`);
+    start(`Timeout nach 15s (osm=${tileCounts.osm}, terrain=${tileCounts.terrainSource})`);
   }
 }, 15000);
 
