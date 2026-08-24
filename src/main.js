@@ -5,7 +5,14 @@ import { createNatureLayer } from './three/createNatureLayer.js';
 import { createStatus } from './ui/status.js';
 
 const status = createStatus();
+const terrainDebug = createStatus('terrain-debug');
 const map = createMap();
+
+map.on('error', (event) => {
+  if (event.sourceId === 'terrain') {
+    terrainDebug.set(`Terrain-Fehler: ${event.error?.message ?? 'unbekannt'}`, 'error');
+  }
+});
 
 async function getNatureData() {
   try {
@@ -20,6 +27,17 @@ async function getNatureData() {
 map.on('load', async () => {
   status.set('Terrain geladen · erzeuge Vegetation …');
   await new Promise((resolve) => map.once('idle', resolve));
+
+  const center = map.getCenter();
+  const elevation = map.queryTerrainElevation(center);
+  const terrain = map.getTerrain();
+  terrainDebug.set(
+    `Terrain: ${terrain ? 'aktiv' : 'AUS'} · Elevation@Zentrum: ${
+      elevation != null ? Math.round(elevation) + ' m' : 'null'
+    } · pitch=${Math.round(map.getPitch())}°`,
+    elevation ? 'ready' : 'error',
+  );
+
   const data = await getNatureData();
   map.addLayer(createNatureLayer({ data, status }));
 });

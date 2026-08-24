@@ -5,6 +5,7 @@ export function createStatus(elementId = 'status') {
       if (!element) return;
       element.textContent = message;
       element.dataset.state = state;
+      element.hidden = false;
     },
     hide() {
       if (element) element.hidden = true;

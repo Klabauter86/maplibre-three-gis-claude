@@ -11,6 +11,7 @@ export function createMap(container = 'map') {
     bearing: MAP_CONFIG.bearing,
     minZoom: MAP_CONFIG.minZoom,
     maxZoom: MAP_CONFIG.maxZoom,
+    maxPitch: 85,
     canvasContextAttributes: { antialias: true },
     style: {
       version: 8,
