@@ -2,6 +2,15 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MAP_CONFIG, SOURCES } from './config.js';
 
+// MapLibre resolves its Web Worker script relative to its own module URL
+// at runtime. Vite bundles the library into our single output file, so
+// that relative lookup 404s and the worker never initializes — terrain
+// and hillshade (raster-dem, which needs the worker to decode DEM data)
+// then hang forever with zero tiles, even though plain raster tiles
+// (no worker needed) load fine. Point it at the copy Vite serves as a
+// static asset instead (see scripts/copy-maplibre-worker.mjs).
+maplibregl.setWorkerUrl(`${import.meta.env.BASE_URL}maplibre-gl-worker.mjs`);
+
 // Mirrors MapLibre's official "3D Terrain" example:
 // https://github.com/maplibre/maplibre-gl-js/blob/main/test/examples/3d-terrain.html
 export function createMap(container = 'map') {

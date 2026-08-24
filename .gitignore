@@ -1,5 +1,7 @@
 node_modules/
 dist/
+public/maplibre-gl-worker.mjs
+public/maplibre-gl-shared.mjs
 .vite/
 .DS_Store
 *.log
