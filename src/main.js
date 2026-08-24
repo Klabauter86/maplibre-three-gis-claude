@@ -6,13 +6,44 @@ import { createStatus } from './ui/status.js';
 
 const status = createStatus();
 const terrainDebug = createStatus('terrain-debug');
+
+const canvas = document.createElement('canvas');
+const webgl2 = canvas.getContext('webgl2');
+const webgl1 = webgl2 ? null : canvas.getContext('webgl');
+if (!webgl2 && !webgl1) {
+  status.set('Kein WebGL verfügbar – Browser/Gerät unterstützt kein WebGL', 'error');
+  throw new Error('WebGL not available');
+}
+
+status.set(`Initialisiere 3D-GIS … (WebGL${webgl2 ? '2' : '1'} ok)`);
+
 const map = createMap();
+
+const tileCounts = { osm: 0, terrain: 0 };
+map.on('sourcedata', (event) => {
+  if (event.sourceId && event.sourceId in tileCounts && event.tile) {
+    tileCounts[event.sourceId] += 1;
+    terrainDebug.set(`Lade Kacheln … osm=${tileCounts.osm} terrain=${tileCounts.terrain}`);
+  }
+});
 
 map.on('error', (event) => {
   if (event.sourceId === 'terrain') {
     terrainDebug.set(`Terrain-Fehler: ${event.error?.message ?? 'unbekannt'}`, 'error');
   }
 });
+
+let loaded = false;
+map.once('load', () => {
+  loaded = true;
+});
+setTimeout(() => {
+  if (loaded) return;
+  status.set(
+    `Timeout: Karten-„load“ nach 15s nicht ausgelöst (Kacheln: osm=${tileCounts.osm}, terrain=${tileCounts.terrain}) – vermutlich hängende Netzwerk-Requests`,
+    'error',
+  );
+}, 15000);
 
 async function getNatureData() {
   try {
