@@ -4,7 +4,7 @@ import { MAP_CONFIG, BASEMAP_STYLES } from './map/config.js';
 import { applyBasemapStyle } from './map/basemap.js';
 import { createStatus } from './ui/status.js';
 import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
-import { showGpxTrack, showTrackMask, removeGpxTrackAndMask } from './gpx/gpxTrack.js';
+import { showGpxTrack, showTrackMask, showWaypoints, removeGpxTrackAndMask } from './gpx/gpxTrack.js';
 import { buildTrackMask } from './gpx/trackMask.js';
 import { enableOrbitOnLongPress } from './map/orbitOnLongPress.js';
 
@@ -123,12 +123,13 @@ gpxInput?.addEventListener('change', async () => {
 
   try {
     const text = await file.text();
-    const { geojson, bounds } = parseGpxToGeoJSON(text);
+    const { geojson, waypoints, bounds } = parseGpxToGeoJSON(text);
 
     await ensureStyleLoaded();
     const trackMask = buildTrackMask(geojson.features[0]);
     showTrackMask(map, trackMask);
     showGpxTrack(map, geojson);
+    showWaypoints(map, waypoints);
     map.fitBounds(bounds, { padding: 60, duration: 800 });
     if (resetButton) resetButton.hidden = false;
 

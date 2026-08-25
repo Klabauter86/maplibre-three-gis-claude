@@ -30,6 +30,21 @@ export function parseGpxToGeoJSON(xmlText) {
     throw new Error('Keine gültigen Track-Punkte (trkseg/trkpt) in der GPX-Datei gefunden');
   }
 
+  const waypoints = Array.from(doc.querySelectorAll('wpt'))
+    .map((wpt) => ({
+      lng: parseFloat(wpt.getAttribute('lon')),
+      lat: parseFloat(wpt.getAttribute('lat')),
+      name: wpt.querySelector('name')?.textContent?.trim() || '',
+    }))
+    .filter((wp) => Number.isFinite(wp.lng) && Number.isFinite(wp.lat));
+
+  for (const { lng, lat } of waypoints) {
+    if (lng < minLng) minLng = lng;
+    if (lat < minLat) minLat = lat;
+    if (lng > maxLng) maxLng = lng;
+    if (lat > maxLat) maxLat = lat;
+  }
+
   const geojson = {
     type: 'FeatureCollection',
     features: [
@@ -43,6 +58,7 @@ export function parseGpxToGeoJSON(xmlText) {
 
   return {
     geojson,
+    waypoints,
     bounds: [
       [minLng, minLat],
       [maxLng, maxLat],
