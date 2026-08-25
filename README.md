@@ -16,8 +16,10 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
 - GPX import: load a `.gpx` file via the "GPX laden" button, its track is drawn on the
   map with each segment labeled (from its `<trk><name>`) and colored by keywords in
   that name — "Gehen" renders yellow/dotted, "Klettersteig A"–"Klettersteig E" render
-  along the blue → red → black via-ferrata difficulty scale, anything else cycles
-  through a fallback palette by segment index — its waypoints (`<wpt>`) are shown as
+  along the blue → red → black via-ferrata difficulty scale (a combined grade like
+  "Klettersteig B/C" or "Klettersteig C-D" gets the color between its two letters),
+  anything else cycles through a fallback palette by segment index — its waypoints
+  (`<wpt>`) are shown as
   labeled markers, and the map/terrain outside a corridor around the track is masked
   out so only that area is visible
 - "Punkte"/"Segmente" checkboxes (below the GPX button) show or hide all waypoints or
