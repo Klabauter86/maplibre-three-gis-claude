@@ -7,7 +7,11 @@ const TRACK_LAYER_ID = 'gpx-track-line';
 
 // Cycled by segmentIndex % length so each <trkseg> gets a visually distinct
 // color, making breaks/gaps in the recorded track obvious on the map.
-const SEGMENT_COLORS = ['#ff5a3d', '#22d3ee', '#a3e635', '#f472b6', '#fbbf24', '#818cf8'];
+export const SEGMENT_COLORS = ['#ff5a3d', '#22d3ee', '#a3e635', '#f472b6', '#fbbf24', '#818cf8'];
+
+export function segmentColor(segmentIndex) {
+  return SEGMENT_COLORS[segmentIndex % SEGMENT_COLORS.length];
+}
 
 let waypointMarkers = [];
 
@@ -87,6 +91,20 @@ export function showWaypoints(map, waypoints) {
 export function removeWaypoints() {
   for (const marker of waypointMarkers) marker.remove();
   waypointMarkers = [];
+}
+
+export function setWaypointsVisible(visible) {
+  for (const marker of waypointMarkers) {
+    marker.getElement().style.display = visible ? '' : 'none';
+  }
+}
+
+// hiddenIndices: Set/Array of segmentIndex values to hide; an empty one
+// shows every segment again.
+export function setSegmentVisibility(map, hiddenIndices) {
+  if (!map.getLayer(TRACK_LAYER_ID)) return;
+  const hidden = [...hiddenIndices];
+  map.setFilter(TRACK_LAYER_ID, hidden.length === 0 ? null : ['!', ['in', ['get', 'segmentIndex'], ['literal', hidden]]]);
 }
 
 export function removeGpxTrackAndMask(map) {

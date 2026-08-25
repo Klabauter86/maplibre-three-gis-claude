@@ -4,7 +4,15 @@ import { MAP_CONFIG, BASEMAP_STYLES } from './map/config.js';
 import { applyBasemapStyle } from './map/basemap.js';
 import { createStatus } from './ui/status.js';
 import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
-import { showGpxTrack, showTrackMask, showWaypoints, removeGpxTrackAndMask } from './gpx/gpxTrack.js';
+import {
+  showGpxTrack,
+  showTrackMask,
+  showWaypoints,
+  removeGpxTrackAndMask,
+  setWaypointsVisible,
+  setSegmentVisibility,
+  segmentColor,
+} from './gpx/gpxTrack.js';
 import { buildTrackMask } from './gpx/trackMask.js';
 import { enableOrbitOnLongPress } from './map/orbitOnLongPress.js';
 
@@ -83,9 +91,75 @@ async function ensureStyleLoaded() {
   await new Promise((resolve) => map.once('style.load', resolve));
 }
 
+const layersPanel = document.getElementById('gpx-layers-panel');
+
+function clearLayersPanel() {
+  if (!layersPanel) return;
+  layersPanel.replaceChildren();
+  layersPanel.hidden = true;
+}
+
+function addLayerRow({ checked, swatchColor, label, onToggle }) {
+  const row = document.createElement('label');
+  row.className = 'gpx-layer-row';
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = checked;
+  checkbox.addEventListener('change', () => onToggle(checkbox.checked));
+  row.appendChild(checkbox);
+
+  if (swatchColor) {
+    const swatch = document.createElement('span');
+    swatch.className = 'gpx-layer-swatch';
+    swatch.style.background = swatchColor;
+    row.appendChild(swatch);
+  }
+
+  const labelEl = document.createElement('span');
+  labelEl.className = 'gpx-layer-label';
+  labelEl.textContent = label;
+  row.appendChild(labelEl);
+
+  layersPanel.appendChild(row);
+}
+
+function buildLayersPanel(segmentsMeta, waypointCount) {
+  if (!layersPanel) return;
+  layersPanel.replaceChildren();
+
+  if (waypointCount > 0) {
+    addLayerRow({
+      checked: true,
+      label: `Punkte (${waypointCount})`,
+      onToggle: (visible) => setWaypointsVisible(visible),
+    });
+    const divider = document.createElement('div');
+    divider.className = 'gpx-layer-divider';
+    layersPanel.appendChild(divider);
+  }
+
+  const hiddenSegments = new Set();
+  for (const { segmentIndex, name } of segmentsMeta) {
+    addLayerRow({
+      checked: true,
+      swatchColor: segmentColor(segmentIndex),
+      label: name,
+      onToggle: (visible) => {
+        if (visible) hiddenSegments.delete(segmentIndex);
+        else hiddenSegments.add(segmentIndex);
+        setSegmentVisibility(map, hiddenSegments);
+      },
+    });
+  }
+
+  layersPanel.hidden = false;
+}
+
 const resetButton = document.getElementById('reset-view');
 resetButton?.addEventListener('click', () => {
   removeGpxTrackAndMask(map);
+  clearLayersPanel();
   map.easeTo({
     center: MAP_CONFIG.center,
     zoom: MAP_CONFIG.zoom,
@@ -129,7 +203,12 @@ gpxInput?.addEventListener('change', async () => {
     const trackMask = buildTrackMask(geojson);
     showTrackMask(map, trackMask);
     showGpxTrack(map, geojson);
+    setSegmentVisibility(map, []); // clear any filter left from a previous import
     showWaypoints(map, waypoints);
+    buildLayersPanel(
+      geojson.features.map((feature) => feature.properties),
+      waypoints.length,
+    );
     map.fitBounds(bounds, { padding: 60, duration: 800 });
     if (resetButton) resetButton.hidden = false;
 

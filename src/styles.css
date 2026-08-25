@@ -43,6 +43,51 @@ html, body { overflow: hidden; background: #111827; font-family: Inter, ui-sans-
 }
 .gpx-control:active { background: rgb(31 41 55 / 88%); }
 select.gpx-control { appearance: auto; }
+.gpx-layers-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: white;
+  background: rgb(17 24 39 / 78%);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 5px 20px rgb(0 0 0 / 20%);
+  font-size: 12px;
+  max-width: min(70vw, 260px);
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.gpx-layer-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 2px;
+  cursor: pointer;
+  user-select: none;
+}
+.gpx-layer-row input[type="checkbox"] {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  accent-color: #ff5a3d;
+}
+.gpx-layer-swatch {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.gpx-layer-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gpx-layer-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: rgb(255 255 255 / 15%);
+}
 .gpx-waypoint {
   display: flex;
   flex-direction: column;
