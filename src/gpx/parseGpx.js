@@ -1,3 +1,5 @@
+import { segmentStyle } from './segmentStyle.js';
+
 export function parseGpxToGeoJSON(xmlText) {
   const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
   if (doc.querySelector('parsererror')) {
@@ -35,7 +37,7 @@ export function parseGpxToGeoJSON(xmlText) {
 
       segmentFeatures.push({
         type: 'Feature',
-        properties: { segmentIndex, name },
+        properties: { segmentIndex, name, ...segmentStyle(name, segmentIndex) },
         geometry: { type: 'LineString', coordinates: points },
       });
       for (const [lng, lat] of points) {

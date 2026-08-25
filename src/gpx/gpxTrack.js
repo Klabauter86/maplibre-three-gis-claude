@@ -3,13 +3,11 @@ import * as maplibregl from 'maplibre-gl';
 const MASK_SOURCE_ID = 'gpx-mask';
 const MASK_LAYER_ID = 'gpx-mask-fill';
 const TRACK_SOURCE_ID = 'gpx-track';
-const TRACK_LAYER_ID = 'gpx-track-line';
-
-// Cycled by segmentIndex % length so each <trkseg> gets a visually distinct
-// color, making breaks/gaps in the recorded track obvious on the map.
-const SEGMENT_COLORS = ['#ff5a3d', '#22d3ee', '#a3e635', '#f472b6', '#fbbf24', '#818cf8'];
+const TRACK_LAYER_SOLID_ID = 'gpx-track-line-solid';
+const TRACK_LAYER_DASHED_ID = 'gpx-track-line-dashed';
 
 let waypointMarkers = [];
+let segmentLabelMarkers = [];
 
 // Opaque fill hiding everything outside the track corridor. Must be added
 // (or already exist) before the track line layer so the line stays drawn
@@ -33,6 +31,9 @@ export function showTrackMask(map, maskGeojson) {
   });
 }
 
+// "Gehen" (walking) segments render dashed; everything else solid. Split
+// into two layers because line-dasharray isn't data-driven per feature in
+// MapLibre's style spec, only per layer.
 export function showGpxTrack(map, geojson) {
   const source = map.getSource(TRACK_SOURCE_ID);
   if (source) {
@@ -42,21 +43,55 @@ export function showGpxTrack(map, geojson) {
 
   map.addSource(TRACK_SOURCE_ID, { type: 'geojson', data: geojson });
   map.addLayer({
-    id: TRACK_LAYER_ID,
+    id: TRACK_LAYER_SOLID_ID,
     type: 'line',
     source: TRACK_SOURCE_ID,
+    filter: ['!=', ['get', 'dashed'], true],
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': [
-        'match',
-        ['%', ['get', 'segmentIndex'], SEGMENT_COLORS.length],
-        ...SEGMENT_COLORS.flatMap((color, index) => [index, color]),
-        SEGMENT_COLORS[0],
-      ],
+      'line-color': ['get', 'color'],
       'line-width': 4,
       'line-opacity': 0.9,
     },
   });
+  map.addLayer({
+    id: TRACK_LAYER_DASHED_ID,
+    type: 'line',
+    source: TRACK_SOURCE_ID,
+    filter: ['==', ['get', 'dashed'], true],
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': ['get', 'color'],
+      'line-width': 4,
+      'line-opacity': 0.9,
+      'line-dasharray': [0.3, 1.3],
+    },
+  });
+}
+
+// DOM-based labels (not a symbol layer, for the same glyphs-independence
+// reason as waypoint labels) placed at each segment's midpoint vertex.
+export function showSegmentLabels(map, features) {
+  removeSegmentLabels();
+  for (const feature of features) {
+    const { name, color } = feature.properties;
+    if (!name) continue;
+
+    const el = document.createElement('div');
+    el.className = 'gpx-segment-label';
+    el.style.setProperty('--segment-color', color);
+    el.textContent = name;
+
+    const coordinates = feature.geometry.coordinates;
+    const midpoint = coordinates[Math.floor((coordinates.length - 1) / 2)];
+    const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(midpoint).addTo(map);
+    segmentLabelMarkers.push(marker);
+  }
+}
+
+function removeSegmentLabels() {
+  for (const marker of segmentLabelMarkers) marker.remove();
+  segmentLabelMarkers = [];
 }
 
 // DOM-based markers (not a symbol layer) so waypoint labels don't depend on
@@ -96,6 +131,10 @@ export function setWaypointsVisible(visible) {
 }
 
 export function setSegmentsVisible(map, visible) {
-  if (!map.getLayer(TRACK_LAYER_ID)) return;
-  map.setLayoutProperty(TRACK_LAYER_ID, 'visibility', visible ? 'visible' : 'none');
+  for (const layerId of [TRACK_LAYER_SOLID_ID, TRACK_LAYER_DASHED_ID]) {
+    if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+  }
+  for (const marker of segmentLabelMarkers) {
+    marker.getElement().style.display = visible ? '' : 'none';
+  }
 }

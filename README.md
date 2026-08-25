@@ -14,9 +14,12 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
   content/network filter), terrain is disabled and the app continues with a flat map
   instead of hanging
 - GPX import: load a `.gpx` file via the "GPX laden" button, its track is drawn on the
-  map with each `<trkseg>` in a distinct color (so recording breaks/gaps are visible),
-  its waypoints (`<wpt>`) are shown as labeled markers, and the map/terrain outside a
-  corridor around the track is masked out so only that area is visible
+  map with each segment labeled (from its `<trk><name>`) and colored by keywords in
+  that name — "Gehen" renders yellow/dotted, "Klettersteig A"–"Klettersteig E" render
+  along the blue → red → black via-ferrata difficulty scale, anything else cycles
+  through a fallback palette by segment index — its waypoints (`<wpt>`) are shown as
+  labeled markers, and the map/terrain outside a corridor around the track is masked
+  out so only that area is visible
 - "Punkte"/"Segmente" checkboxes (below the GPX button) show or hide all waypoints or
   all track segments at once; "Ansicht zurücksetzen" re-fits the camera to the loaded
   track (undoing pan/zoom/rotation) without clearing it or the toggle states
@@ -53,6 +56,7 @@ src/
 │   └── orbitOnLongPress.js
 ├── gpx/
 │   ├── parseGpx.js
+│   ├── segmentStyle.js
 │   ├── trackMask.js
 │   └── gpxTrack.js
 ├── ui/

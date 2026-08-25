@@ -8,6 +8,7 @@ import {
   showGpxTrack,
   showTrackMask,
   showWaypoints,
+  showSegmentLabels,
   setWaypointsVisible,
   setSegmentsVisible,
 } from './gpx/gpxTrack.js';
@@ -141,6 +142,7 @@ gpxInput?.addEventListener('change', async () => {
     const trackMask = buildTrackMask(geojson);
     showTrackMask(map, trackMask);
     showGpxTrack(map, geojson);
+    showSegmentLabels(map, geojson.features);
     showWaypoints(map, waypoints);
     currentTrackBounds = bounds;
 
