@@ -13,7 +13,12 @@
         <select id="basemap-select" class="gpx-control" aria-label="Kartenstil"></select>
         <label id="gpx-control" class="gpx-control" for="gpx-input">GPX laden</label>
         <button id="reset-view" class="gpx-control" type="button" hidden>Ansicht zurücksetzen</button>
-        <div id="gpx-layers-panel" class="gpx-layers-panel" hidden></div>
+        <label id="toggle-waypoints-row" class="gpx-control gpx-toggle" hidden>
+          <input type="checkbox" id="toggle-waypoints" checked /> Punkte
+        </label>
+        <label id="toggle-segments-row" class="gpx-control gpx-toggle" hidden>
+          <input type="checkbox" id="toggle-segments" checked /> Segmente
+        </label>
       </div>
       <!--
         iOS Safari maps `accept` to file-type UTIs when browsing the Files

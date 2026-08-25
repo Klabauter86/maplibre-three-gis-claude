@@ -15,12 +15,11 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
   instead of hanging
 - GPX import: load a `.gpx` file via the "GPX laden" button, its track is drawn on the
   map with each `<trkseg>` in a distinct color (so recording breaks/gaps are visible),
-  its waypoints (`<wpt>`) are shown as labeled markers, the view zooms in to it, and the
-  map/terrain outside a corridor around the track is masked out so only that area is
-  visible; "Ansicht zurücksetzen" removes it and returns to the default view
-- A layers panel (below the GPX/reset buttons) lists all points and named segments
-  (labeled from each `<trk><name>`, e.g. "Aufstieg (Teil 1)") with checkboxes to show
-  or hide them individually
+  its waypoints (`<wpt>`) are shown as labeled markers, and the map/terrain outside a
+  corridor around the track is masked out so only that area is visible
+- "Punkte"/"Segmente" checkboxes (below the GPX button) show or hide all waypoints or
+  all track segments at once; "Ansicht zurücksetzen" re-fits the camera to the loaded
+  track (undoing pan/zoom/rotation) without clearing it or the toggle states
 - Long-press a point on the map to arm orbiting around it, then drag vertically to
   steer: up spins the view clockwise, down spins it counter-clockwise, speed scales
   with how far up/down you've moved; release to stop

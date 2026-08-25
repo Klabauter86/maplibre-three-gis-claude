@@ -8,10 +8,8 @@ import {
   showGpxTrack,
   showTrackMask,
   showWaypoints,
-  removeGpxTrackAndMask,
   setWaypointsVisible,
-  setSegmentVisibility,
-  segmentColor,
+  setSegmentsVisible,
 } from './gpx/gpxTrack.js';
 import { buildTrackMask } from './gpx/trackMask.js';
 import { enableOrbitOnLongPress } from './map/orbitOnLongPress.js';
@@ -91,84 +89,24 @@ async function ensureStyleLoaded() {
   await new Promise((resolve) => map.once('style.load', resolve));
 }
 
-const layersPanel = document.getElementById('gpx-layers-panel');
+const toggleWaypointsRow = document.getElementById('toggle-waypoints-row');
+const toggleWaypoints = document.getElementById('toggle-waypoints');
+const toggleSegmentsRow = document.getElementById('toggle-segments-row');
+const toggleSegments = document.getElementById('toggle-segments');
 
-function clearLayersPanel() {
-  if (!layersPanel) return;
-  layersPanel.replaceChildren();
-  layersPanel.hidden = true;
-}
+toggleWaypoints?.addEventListener('change', () => setWaypointsVisible(toggleWaypoints.checked));
+toggleSegments?.addEventListener('change', () => setSegmentsVisible(map, toggleSegments.checked));
 
-function addLayerRow({ checked, swatchColor, label, onToggle }) {
-  const row = document.createElement('label');
-  row.className = 'gpx-layer-row';
+let currentTrackBounds = null;
 
-  const checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.checked = checked;
-  checkbox.addEventListener('change', () => onToggle(checkbox.checked));
-  row.appendChild(checkbox);
-
-  if (swatchColor) {
-    const swatch = document.createElement('span');
-    swatch.className = 'gpx-layer-swatch';
-    swatch.style.background = swatchColor;
-    row.appendChild(swatch);
-  }
-
-  const labelEl = document.createElement('span');
-  labelEl.className = 'gpx-layer-label';
-  labelEl.textContent = label;
-  row.appendChild(labelEl);
-
-  layersPanel.appendChild(row);
-}
-
-function buildLayersPanel(segmentsMeta, waypointCount) {
-  if (!layersPanel) return;
-  layersPanel.replaceChildren();
-
-  if (waypointCount > 0) {
-    addLayerRow({
-      checked: true,
-      label: `Punkte (${waypointCount})`,
-      onToggle: (visible) => setWaypointsVisible(visible),
-    });
-    const divider = document.createElement('div');
-    divider.className = 'gpx-layer-divider';
-    layersPanel.appendChild(divider);
-  }
-
-  const hiddenSegments = new Set();
-  for (const { segmentIndex, name } of segmentsMeta) {
-    addLayerRow({
-      checked: true,
-      swatchColor: segmentColor(segmentIndex),
-      label: name,
-      onToggle: (visible) => {
-        if (visible) hiddenSegments.delete(segmentIndex);
-        else hiddenSegments.add(segmentIndex);
-        setSegmentVisibility(map, hiddenSegments);
-      },
-    });
-  }
-
-  layersPanel.hidden = false;
-}
-
+// Recenters on the currently loaded track rather than clearing it — the
+// track stays loaded (and the point/segment toggles keep their state) until
+// a different GPX file is imported over it.
 const resetButton = document.getElementById('reset-view');
 resetButton?.addEventListener('click', () => {
-  removeGpxTrackAndMask(map);
-  clearLayersPanel();
-  map.easeTo({
-    center: MAP_CONFIG.center,
-    zoom: MAP_CONFIG.zoom,
-    pitch: MAP_CONFIG.pitch,
-    bearing: 0,
-    duration: 800,
-  });
-  resetButton.hidden = true;
-  status.set('Ansicht zurückgesetzt', 'ready');
+  if (!currentTrackBounds) return;
+  map.fitBounds(currentTrackBounds, { padding: 60, duration: 800, bearing: 0, pitch: MAP_CONFIG.pitch });
+  status.set('Ansicht auf Track zurückgesetzt', 'ready');
 });
 
 const basemapSelect = document.getElementById('basemap-select');
@@ -203,12 +141,16 @@ gpxInput?.addEventListener('change', async () => {
     const trackMask = buildTrackMask(geojson);
     showTrackMask(map, trackMask);
     showGpxTrack(map, geojson);
-    setSegmentVisibility(map, []); // clear any filter left from a previous import
     showWaypoints(map, waypoints);
-    buildLayersPanel(
-      geojson.features.map((feature) => feature.properties),
-      waypoints.length,
-    );
+    currentTrackBounds = bounds;
+
+    if (toggleSegments) toggleSegments.checked = true;
+    setSegmentsVisible(map, true);
+    if (toggleWaypointsRow) toggleWaypointsRow.hidden = waypoints.length === 0;
+    if (toggleWaypoints) toggleWaypoints.checked = true;
+    setWaypointsVisible(true);
+    if (toggleSegmentsRow) toggleSegmentsRow.hidden = false;
+
     map.fitBounds(bounds, { padding: 60, duration: 800 });
     if (resetButton) resetButton.hidden = false;
 
