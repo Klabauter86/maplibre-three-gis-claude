@@ -5,6 +5,10 @@ const MASK_LAYER_ID = 'gpx-mask-fill';
 const TRACK_SOURCE_ID = 'gpx-track';
 const TRACK_LAYER_ID = 'gpx-track-line';
 
+// Cycled by segmentIndex % length so each <trkseg> gets a visually distinct
+// color, making breaks/gaps in the recorded track obvious on the map.
+const SEGMENT_COLORS = ['#ff5a3d', '#22d3ee', '#a3e635', '#f472b6', '#fbbf24', '#818cf8'];
+
 let waypointMarkers = [];
 
 // Opaque fill hiding everything outside the track corridor. Must be added
@@ -43,7 +47,12 @@ export function showGpxTrack(map, geojson) {
     source: TRACK_SOURCE_ID,
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': '#ff5a3d',
+      'line-color': [
+        'match',
+        ['%', ['get', 'segmentIndex'], SEGMENT_COLORS.length],
+        ...SEGMENT_COLORS.flatMap((color, index) => [index, color]),
+        SEGMENT_COLORS[0],
+      ],
       'line-width': 4,
       'line-opacity': 0.9,
     },

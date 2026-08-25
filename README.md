@@ -14,9 +14,10 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
   content/network filter), terrain is disabled and the app continues with a flat map
   instead of hanging
 - GPX import: load a `.gpx` file via the "GPX laden" button, its track is drawn on the
-  map, its waypoints (`<wpt>`) are shown as labeled markers, the view zooms in to it,
-  and the map/terrain outside a corridor around the track is masked out so only that
-  area is visible; "Ansicht zurücksetzen" removes it and returns to the default view
+  map with each `<trkseg>` in a distinct color (so recording breaks/gaps are visible),
+  its waypoints (`<wpt>`) are shown as labeled markers, the view zooms in to it, and the
+  map/terrain outside a corridor around the track is masked out so only that area is
+  visible; "Ansicht zurücksetzen" removes it and returns to the default view
 - Long-press a point on the map to arm orbiting around it, then drag vertically to
   steer: up spins the view clockwise, down spins it counter-clockwise, speed scales
   with how far up/down you've moved; release to stop

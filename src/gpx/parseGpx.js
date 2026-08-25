@@ -5,7 +5,7 @@ export function parseGpxToGeoJSON(xmlText) {
   }
 
   const segments = Array.from(doc.querySelectorAll('trkseg'));
-  const lineStrings = [];
+  const segmentFeatures = [];
   let minLng = Infinity;
   let minLat = Infinity;
   let maxLng = -Infinity;
@@ -17,7 +17,11 @@ export function parseGpxToGeoJSON(xmlText) {
       .filter(([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat));
 
     if (points.length < 2) continue;
-    lineStrings.push(points);
+    segmentFeatures.push({
+      type: 'Feature',
+      properties: { segmentIndex: segmentFeatures.length },
+      geometry: { type: 'LineString', coordinates: points },
+    });
     for (const [lng, lat] of points) {
       if (lng < minLng) minLng = lng;
       if (lat < minLat) minLat = lat;
@@ -26,7 +30,7 @@ export function parseGpxToGeoJSON(xmlText) {
     }
   }
 
-  if (lineStrings.length === 0) {
+  if (segmentFeatures.length === 0) {
     throw new Error('Keine gültigen Track-Punkte (trkseg/trkpt) in der GPX-Datei gefunden');
   }
 
@@ -47,13 +51,7 @@ export function parseGpxToGeoJSON(xmlText) {
 
   const geojson = {
     type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        properties: {},
-        geometry: { type: 'MultiLineString', coordinates: lineStrings },
-      },
-    ],
+    features: segmentFeatures,
   };
 
   return {

@@ -126,7 +126,7 @@ gpxInput?.addEventListener('change', async () => {
     const { geojson, waypoints, bounds } = parseGpxToGeoJSON(text);
 
     await ensureStyleLoaded();
-    const trackMask = buildTrackMask(geojson.features[0]);
+    const trackMask = buildTrackMask(geojson);
     showTrackMask(map, trackMask);
     showGpxTrack(map, geojson);
     showWaypoints(map, waypoints);
