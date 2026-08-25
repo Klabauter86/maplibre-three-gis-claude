@@ -1,6 +1,7 @@
 import './styles.css';
 import { createMap } from './map/createMap.js';
-import { MAP_CONFIG } from './map/config.js';
+import { MAP_CONFIG, BASEMAP_STYLES } from './map/config.js';
+import { applyBasemapStyle } from './map/basemap.js';
 import { createStatus } from './ui/status.js';
 import { parseGpxToGeoJSON } from './gpx/parseGpx.js';
 import { showGpxTrack, showTrackMask, removeGpxTrackAndMask } from './gpx/gpxTrack.js';
@@ -22,7 +23,7 @@ status.set(`Initialisiere 3D-GIS … (WebGL${webgl2 ? '2' : '1'} ok)`);
 const map = createMap();
 enableOrbitOnLongPress(map);
 
-const tileCounts = { osm: 0, terrainSource: 0 };
+const tileCounts = { basemap: 0, terrainSource: 0 };
 map.on('sourcedata', (event) => {
   if (event.sourceId && event.sourceId in tileCounts && event.tile) {
     tileCounts[event.sourceId] += 1;
@@ -45,6 +46,18 @@ async function start(note) {
 
 map.once('load', () => start());
 
+// isStyleLoaded() depends on every source's tiles being loaded, so it can
+// go false again long after startup (e.g. terrain tiles retrying, or right
+// after swapping the basemap) — and waiting on the public 'load' event a
+// second time would hang forever, since it only ever fires once per map
+// and itself waits on tile loading. 'style.load' is the right signal here:
+// MapLibre fires it as soon as the style JSON is parsed and its
+// sources/layers are registered, independent of whether any tile ever
+// finishes loading, so it can't get stuck the way terrain-tile hangs get
+// stuck (see the 15s fallback below).
+let styleReady = false;
+map.once('style.load', () => { styleReady = true; });
+
 // Terrain (raster-dem) can hang indefinitely with zero tiles arriving and
 // no error event — e.g. a network filter or content blocker silently
 // dropping requests to the terrain host while normal raster tiles load
@@ -54,9 +67,9 @@ setTimeout(() => {
   if (started) return;
   if (tileCounts.terrainSource === 0) {
     map.setTerrain(null);
-    start(`Terrain deaktiviert – keine Kacheln nach 15s (osm=${tileCounts.osm} lud erfolgreich)`);
+    start(`Terrain deaktiviert – keine Kacheln nach 15s (basemap=${tileCounts.basemap} lud erfolgreich)`);
   } else {
-    start(`Timeout nach 15s (osm=${tileCounts.osm}, terrain=${tileCounts.terrainSource})`);
+    start(`Timeout nach 15s (basemap=${tileCounts.basemap}, terrain=${tileCounts.terrainSource})`);
   }
 }, 15000);
 
@@ -66,8 +79,8 @@ map.on('error', (event) => {
 });
 
 async function ensureStyleLoaded() {
-  if (map.isStyleLoaded()) return;
-  await new Promise((resolve) => map.once('load', resolve));
+  if (styleReady) return;
+  await new Promise((resolve) => map.once('style.load', resolve));
 }
 
 const resetButton = document.getElementById('reset-view');
@@ -83,6 +96,24 @@ resetButton?.addEventListener('click', () => {
   resetButton.hidden = true;
   status.set('Ansicht zurückgesetzt', 'ready');
 });
+
+const basemapSelect = document.getElementById('basemap-select');
+if (basemapSelect) {
+  for (const style of BASEMAP_STYLES) {
+    const option = document.createElement('option');
+    option.value = style.id;
+    option.textContent = style.label;
+    basemapSelect.appendChild(option);
+  }
+  basemapSelect.value = BASEMAP_STYLES[0].id;
+  basemapSelect.addEventListener('change', async () => {
+    const style = BASEMAP_STYLES.find((candidate) => candidate.id === basemapSelect.value);
+    if (!style) return;
+    await ensureStyleLoaded();
+    applyBasemapStyle(map, style);
+    status.set(`Kartenstil: ${style.label}`, 'ready');
+  });
+}
 
 const gpxInput = document.getElementById('gpx-input');
 gpxInput?.addEventListener('change', async () => {

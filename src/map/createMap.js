@@ -1,6 +1,7 @@
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { MAP_CONFIG, SOURCES } from './config.js';
+import { MAP_CONFIG, SOURCES, BASEMAP_STYLES } from './config.js';
+import { basemapSourceFromStyle } from './basemap.js';
 
 // MapLibre resolves its Web Worker script relative to its own module URL
 // at runtime. Vite bundles the library into our single output file, so
@@ -26,12 +27,12 @@ export function createMap(container = 'map') {
     style: {
       version: 8,
       sources: {
-        osm: SOURCES.osm,
+        basemap: basemapSourceFromStyle(BASEMAP_STYLES[0]),
         terrainSource: SOURCES.terrainSource,
         hillshadeSource: SOURCES.hillshadeSource,
       },
       layers: [
-        { id: 'osm', type: 'raster', source: 'osm' },
+        { id: 'basemap', type: 'raster', source: 'basemap' },
         {
           id: 'hills',
           type: 'hillshade',

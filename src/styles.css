@@ -42,5 +42,6 @@ html, body { overflow: hidden; background: #111827; font-family: Inter, ui-sans-
   user-select: none;
 }
 .gpx-control:active { background: rgb(31 41 55 / 88%); }
+select.gpx-control { appearance: auto; }
 .maplibregl-ctrl-top-right { top: env(safe-area-inset-top); right: env(safe-area-inset-right); }
 .maplibregl-ctrl-bottom-right { bottom: env(safe-area-inset-bottom); right: env(safe-area-inset-right); }

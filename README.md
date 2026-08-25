@@ -4,8 +4,11 @@ Starter project for a browser-based 3D terrain map using MapLibre GL JS and Vite
 
 ## Current baseline
 
-- OpenStreetMap raster basemap
-- Mapterhorn Terrain Tiles (Terrarium DEM)
+- Switchable basemap texture (top-left dropdown): OpenStreetMap Standard, OpenTopoMap,
+  Esri Satellit, CARTO Positron, CARTO Dark Matter — all free, keyless raster tile
+  services, swappable at runtime for testing which reads best over the 3D relief
+- Mapterhorn Terrain Tiles (Terrarium DEM) — the height data itself is fixed regardless
+  of basemap choice
 - MapLibre `raster-dem` terrain + hillshade
 - Automatic terrain fallback: if terrain tiles don't arrive within 15s (e.g. blocked by a
   content/network filter), terrain is disabled and the app continues with a flat map
@@ -43,6 +46,7 @@ src/
 ├── map/
 │   ├── config.js
 │   ├── createMap.js
+│   ├── basemap.js
 │   └── orbitOnLongPress.js
 ├── gpx/
 │   ├── parseGpx.js
