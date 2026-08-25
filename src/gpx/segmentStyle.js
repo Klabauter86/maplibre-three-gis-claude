@@ -38,22 +38,30 @@ const GRADE_COLORS = {
 // word, e.g. "Klettersteig B Erweiterung".
 const KLETTERSTEIG_GRADE_RE = /klettersteig[^a-eA-E]*\b([a-eA-E])\b(?:\s*[/-]\s*\b([a-eA-E])\b)?/i;
 
+// Real-world track exports often skip the word "Klettersteig" entirely and
+// name a segment just by its grade — "A", "A/B", "C-D". This only matches
+// when the *entire* (trimmed) name is such a grade, so it can't misfire on
+// an unrelated name that merely starts with a letter A-E.
+const BARE_GRADE_RE = /^([a-eA-E])(?:\s*[/-]\s*([a-eA-E]))?$/i;
+
+function gradeMatchColor(gradeA, gradeB) {
+  const colorA = GRADE_COLORS[gradeA.toUpperCase()];
+  return gradeB ? mixColors(colorA, GRADE_COLORS[gradeB.toUpperCase()]) : colorA;
+}
+
 // Derives a line color + dash style from a segment's name: "Gehen" sections
-// render as a yellow dotted trail, "Klettersteig <A-E>" sections are colored
-// by via-ferrata difficulty (a combined grade like "B/C" as the color
-// between B and C), and anything else falls back to a rotating palette by
-// segment index.
+// render as a yellow dotted trail, a via-ferrata grade — "Klettersteig
+// <A-E>" or just the bare grade itself, e.g. "B/C" — is colored by
+// difficulty (a combined grade as the color between its two letters), and
+// anything else falls back to a rotating palette by segment index.
 export function segmentStyle(name, segmentIndex) {
   if (/gehen/i.test(name)) {
     return { color: '#eab308', dashed: true };
   }
 
-  const match = name.match(KLETTERSTEIG_GRADE_RE);
+  const match = name.match(KLETTERSTEIG_GRADE_RE) ?? name.trim().match(BARE_GRADE_RE);
   if (match) {
-    const [, gradeA, gradeB] = match;
-    const colorA = GRADE_COLORS[gradeA.toUpperCase()];
-    const color = gradeB ? mixColors(colorA, GRADE_COLORS[gradeB.toUpperCase()]) : colorA;
-    return { color, dashed: false };
+    return { color: gradeMatchColor(match[1], match[2]), dashed: false };
   }
 
   return { color: FALLBACK_COLORS[segmentIndex % FALLBACK_COLORS.length], dashed: false };
